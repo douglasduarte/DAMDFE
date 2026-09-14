@@ -1,0 +1,8 @@
+/vendor/
+/.phpunit.result.cache
+/build/
+/tests/output/
+*.pdf
+*.png
+.idea/
+.vscode/

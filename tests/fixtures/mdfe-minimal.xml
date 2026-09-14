@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MDFe xmlns="http://www.portalfiscal.inf.br/mdfe" versao="3.00">
+  <infMDFe Id="MDFe35260112345678000199580010000000011000000010" versao="3.00">
+    <ide>
+      <cUF>35</cUF><tpAmb>2</tpAmb><tpEmit>2</tpEmit><tpTransp>1</tpTransp>
+      <mod>58</mod><serie>1</serie><nMDF>1</nMDF><cMDF>00000001</cMDF>
+      <modal>1</modal><dhEmi>2026-09-14T12:00:00-03:00</dhEmi><tpEmis>1</tpEmis>
+    </ide>
+    <emit><CNPJ>12345678000199</CNPJ><IE>123456789</IE><xNome>TRANSPORTADORA TESTE LTDA</xNome><xFant>TRANSP TESTE</xFant><enderEmit><xLgr>Rua Teste</xLgr><nro>100</nro><xBairro>Centro</xBairro><cMun>3550308</cMun><xMun>São Paulo</xMun><CEP>01000000</CEP><UF>SP</UF><fone>1133334444</fone></enderEmit></emit>
+    <infModal><rodo><veicTracao><cInt>ABC1234</cInt><placa>ABC1D23</placa><tara>10000</tara><condutor><xNome>Motorista Teste</xNome><CPF>12345678901</CPF></condutor></veicTracao></rodo></infModal>
+    <infDoc><infMunDescarga><cMunDescarga>3550308</cMunDescarga><xMunDescarga>São Paulo</xMunDescarga><infCTe><chCTe>35260912345678000199570010000000011000000010</chCTe></infCTe></infMunDescarga></infDoc>
+    <tot><qCTe>1</qCTe><qNFe>0</qNFe><qMDFe>0</qMDFe><vCarga>1500.00</vCarga><cUnid>01</cUnid><qCarga>1000.0000</qCarga><cUnidPeso>01</cUnidPeso><qTotPeso>1000.0000</qTotPeso></tot>
+  </infMDFe>
+  <infMDFeSupl><qrCodMDFe>https://dfe-portal.svrs.rs.gov.br/mdfe/qrCode?chMDFe=35260112345678000199580010000000011000000010&amp;tpAmb=2</qrCodMDFe></infMDFeSupl>
+  <protMDFe><infProt><tpAmb>2</tpAmb><verAplic>TESTE</verAplic><chMDFe>35260112345678000199580010000000011000000010</chMDFe><dhRecbto>2026-09-14T12:01:00-03:00</dhRecbto><nProt>135260000000001</nProt><cStat>100</cStat><xMotivo>Autorizado o uso do MDF-e</xMotivo></infProt></protMDFe>
+</MDFe>

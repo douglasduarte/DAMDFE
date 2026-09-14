@@ -1,0 +1,9 @@
+                    GNU LESSER GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+This project is distributed under the terms of the GNU Lesser General Public
+License version 3 or any later version. See <https://www.gnu.org/licenses/>.
+
+The implementation is an independent PHP implementation inspired by the
+public BrazilFiscalReport project. Copyright and license notices of third
+party dependencies remain applicable.

@@ -1,0 +1,26 @@
+{
+    "name": "douglasduarte/damdfe",
+    "description": "Standalone PHP DAMDFE renderer for MDF-e XML documents.",
+    "type": "library",
+    "license": "LGPL-3.0-or-later",
+    "require": {
+        "php": "^8.2",
+        "setasign/fpdf": "^1.9",
+        "milon/barcode": "^13.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "DAMDFE\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DAMDFE\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5 || ^11.0 || ^12.0"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
