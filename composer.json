@@ -5,6 +5,9 @@
     "license": "LGPL-3.0-or-later",
     "require": {
         "php": "^8.2",
+        "ext-dom": "*",
+        "ext-gd": "*",
+        "ext-mbstring": "*",
         "setasign/fpdf": "^1.9",
         "milon/barcode": "^13.1"
     },

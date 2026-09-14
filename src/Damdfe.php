@@ -105,7 +105,7 @@ final class Damdfe
 
         $pdf->SetFont($this->config->font, 'B', 8);
         $pdf->SetXY($x + 122, $y + 4);
-        $pdf->Cell(76, 5, 'CHAVE DE ACESSO', 0, 2, 'R');
+        $pdf->Cell(76, 5, $this->pdfText('CHAVE DE ACESSO'), 0, 2, 'R');
         $pdf->SetFont($this->config->font, '', 8);
         $pdf->Cell(76, 5, $this->formatKey($this->key), 0, 2, 'R');
 
@@ -118,7 +118,7 @@ final class Damdfe
     {
         $y = 38.0;
         $this->boxTitle($pdf, 5, $y, 200, 5, 'IDENTIFICAÇÃO DO MDF-e');
-        $this->field($pdf, 5, $y + 5, 38, 10, 'MODELO', $this->value('mod', '57'));
+        $this->field($pdf, 5, $y + 5, 38, 10, 'MODELO', $this->value('mod', '58'));
         $this->field($pdf, 43, $y + 5, 38, 10, 'SÉRIE', $this->value('serie'));
         $this->field($pdf, 81, $y + 5, 42, 10, 'NÚMERO', $this->value('nMDF'));
         $this->field($pdf, 123, $y + 5, 82, 10, 'DATA/HORA DE EMISSÃO', $this->value('dhEmi'));
@@ -131,10 +131,11 @@ final class Damdfe
         $y = 68.0;
         $this->boxTitle($pdf, 5, $y, 200, 5, 'EMITENTE');
         $issuer = $this->first('//*[local-name()="emit"]');
+        $issuerAddress = $this->first('//*[local-name()="emit"]/*[local-name()="enderEmit"]');
         $this->field($pdf, 5, $y + 5, 100, 10, 'RAZÃO SOCIAL', $this->text($issuer, 'xNome'));
         $this->field($pdf, 105, $y + 5, 100, 10, 'CNPJ/CPF', $this->documentNumber($issuer));
-        $this->field($pdf, 5, $y + 15, 130, 10, 'ENDEREÇO', trim($this->text($issuer, 'xLgr') . ', ' . $this->text($issuer, 'nro')));
-        $this->field($pdf, 135, $y + 15, 70, 10, 'MUNICÍPIO/UF', $this->text($issuer, 'xMun') . '/' . $this->text($issuer, 'UF'));
+        $this->field($pdf, 5, $y + 15, 130, 10, 'ENDEREÇO', trim($this->text($issuerAddress, 'xLgr') . ', ' . $this->text($issuerAddress, 'nro')));
+        $this->field($pdf, 135, $y + 15, 70, 10, 'MUNICÍPIO/UF', $this->text($issuerAddress, 'xMun') . '/' . $this->text($issuerAddress, 'UF'));
     }
 
     private function drawDocuments(FPDF $pdf): void
@@ -143,7 +144,7 @@ final class Damdfe
         $this->boxTitle($pdf, 5, $y, 200, 5, 'DOCUMENTOS TRANSPORTADOS');
         $pdf->SetFont($this->config->font, 'B', 7);
         $pdf->SetXY(6, $y + 6);
-        $pdf->Cell(48, 5, 'MUNICÍPIO DE DESCARGA', 1);
+        $pdf->Cell(48, 5, $this->pdfText('MUNICÍPIO DE DESCARGA'), 1);
         $pdf->Cell(78, 5, 'CHAVE DO DOCUMENTO', 1);
         $pdf->Cell(74, 5, 'TIPO', 1);
 
@@ -161,9 +162,9 @@ final class Damdfe
                     foreach ($this->children($municipio, $tag) as $documento) {
                         $chave = $this->text($documento, $tag === 'infCTe' ? 'chCTe' : 'chNFe');
                         $pdf->SetXY(6, $line);
-                        $pdf->Cell(48, 5, $cidade, 1);
+                        $pdf->Cell(48, 5, $this->pdfText($cidade), 1);
                         $pdf->Cell(78, 5, $chave, 1);
-                        $pdf->Cell(74, 5, $tipo, 1);
+                        $pdf->Cell(74, 5, $this->pdfText($tipo), 1);
                         $line += 5;
                         if ($line > 245) {
                             break 2;
@@ -193,7 +194,7 @@ final class Damdfe
         }
         $pdf->SetFont($this->config->font, '', 6);
         $pdf->SetXY(5, 255);
-        $pdf->Cell(200, 4, 'Documento auxiliar — não possui validade como documento fiscal.', 0, 0, 'C');
+        $pdf->Cell(200, 4, $this->pdfText('Documento auxiliar - não possui validade como documento fiscal.'), 0, 0, 'C');
     }
 
     private function drawWatermarks(FPDF $pdf): void
@@ -221,7 +222,7 @@ final class Damdfe
         $pdf->Rect($x, $y, $width, $height, 'DF');
         $pdf->SetFont($this->config->font, 'B', 7);
         $pdf->SetXY($x + 1, $y + 1);
-        $pdf->Cell($width - 2, $height - 2, $title, 0, 0, 'L');
+        $pdf->Cell($width - 2, $height - 2, $this->pdfText($title), 0, 0, 'L');
     }
 
     private function field(FPDF $pdf, float $x, float $y, float $width, float $height, string $label, string $value): void
@@ -229,9 +230,9 @@ final class Damdfe
         $pdf->Rect($x, $y, $width, $height);
         $pdf->SetFont($this->config->font, '', 5);
         $pdf->SetXY($x + 1, $y + 1);
-        $pdf->Cell($width - 2, 3, $label, 0, 2, 'L');
+        $pdf->Cell($width - 2, 3, $this->pdfText($label), 0, 2, 'L');
         $pdf->SetFont($this->config->font, 'B', 7);
-        $pdf->Cell($width - 2, $height - 5, $this->truncate($value, $width), 0, 0, 'L');
+        $pdf->Cell($width - 2, $height - 5, $this->pdfText($this->truncate($value, $width)), 0, 0, 'L');
     }
 
     private function value(string $tag, string $default = ''): string
@@ -303,6 +304,11 @@ final class Damdfe
     {
         $max = max(10, (int) ($width * 2.1));
         return mb_strimwidth($value, 0, $max, '…', 'UTF-8');
+    }
+
+    private function pdfText(string $value): string
+    {
+        return mb_convert_encoding($value, 'Windows-1252', 'UTF-8');
     }
 
     private function barcodeGenerator(): BarcodeGeneratorInterface
