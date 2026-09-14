@@ -36,10 +36,15 @@ return response((new \DAMDFE\Damdfe($xml))->render(), 200, [
 
 ## Layout disponível
 
-O layout A4 do modal rodoviário segue a organização visual do DAMDFE do
-[BrazilFiscalReport](https://github.com/Engenere/BrazilFiscalReport), com a
-tipografia, as margens, os espaçamentos e as caixas arredondadas inspirados no
-[NFePHP/sped-da](https://github.com/nfephp-org/sped-da), e inclui:
+O layout A4 segue a disposição do DACTE do
+[NFePHP/sped-da](https://github.com/nfephp-org/sped-da), adaptada aos dados do
+MDF-e e às caixas arredondadas do DAMDFE do
+[BrazilFiscalReport](https://github.com/Engenere/BrazilFiscalReport). O bloco
+principal usa canhoto no topo e três colunas: emitente, identificação fiscal
+com código de barras e chave de acesso, e modal com QR Code. Abaixo ficam o
+início e o término do percurso, o resumo ANTT e a composição da carga.
+
+O documento inclui:
 
 - emitente, identificação, chave, protocolo, QR Code e código de barras;
 - resumo ANTT, veículos, reboques e condutores;
