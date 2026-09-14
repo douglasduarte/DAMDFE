@@ -227,7 +227,7 @@ final class Damdfe
         $cells = [
             ['QTD. CT-e', $this->text($totals, 'qCTe')],
             ['QTD. NF-e', $this->text($totals, 'qNFe')],
-            ['PESO TOTAL', $this->formatQuantity($this->text($totals, 'qCarga'))],
+            ['PESO TOTAL', $this->formatQuantity($this->text($totals, 'qCarga') ?: $this->text($totals, 'qTotPeso'))],
             ['VALOR TOTAL', $this->formatMoney($this->text($totals, 'vCarga'))],
         ];
         foreach ($cells as $index => [$label, $value]) {
