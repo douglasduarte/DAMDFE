@@ -19,6 +19,8 @@ final class DamdfeTest extends TestCase
 
         self::assertStringStartsWith('%PDF-', $pdf);
         self::assertStringContainsString('DAMDFE', $pdf);
+        self::assertGreaterThanOrEqual(2, substr_count($pdf, '/Subtype /Image'));
+        self::assertStringContainsString('/Count 1', $pdf);
     }
 
     public function test_it_rejects_invalid_xml(): void

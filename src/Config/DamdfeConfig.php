@@ -12,7 +12,7 @@ final class DamdfeConfig
         public readonly float $marginRight = 5.0,
         public readonly float $marginBottom = 5.0,
         public readonly float $marginLeft = 5.0,
-        public readonly string $font = 'Arial',
+        public readonly string $font = 'Times',
     ) {
     }
 }
