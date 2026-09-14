@@ -104,13 +104,10 @@ final class Damdfe
         $width = 210.0 - $this->config->marginLeft - $this->config->marginRight;
         $middle = $x + ($width / 2);
 
-        $pdf->RoundedRect($x, $y, $width, 88);
-        $pdf->Line($middle, $y, $middle, $y + 88);
-        $pdf->Line($x, $y + 25, $middle, $y + 25);
-
         $this->drawIssuer($pdf, $x, $y, $width / 2);
         $this->drawQrCode($pdf, $middle, $y, $width / 2);
 
+        $pdf->RoundedRect($x, $y + 25, $width / 2, 3);
         $pdf->SetFont($this->config->font, 'B', 6.5);
         $pdf->SetXY($x, $y + 25.4);
         $pdf->Cell($width / 2, 2.6, $this->pdfText('DAMDFE - Documento Auxiliar do Manifesto de Documentos Fiscais Eletrônicos'), 0, 0, 'C');
@@ -122,6 +119,8 @@ final class Damdfe
 
     private function drawIssuer(DamdfePdf $pdf, float $x, float $y, float $width): void
     {
+        $pdf->RoundedRect($x, $y, $width, 25);
+
         $textX = $x + 1;
         $textWidth = $width - 2;
 
@@ -161,6 +160,8 @@ final class Damdfe
 
     private function drawQrCode(DamdfePdf $pdf, float $x, float $y, float $width): void
     {
+        $pdf->RoundedRect($x, $y, $width, 25);
+
         $qr = $this->descendantText($this->first('//*[local-name()="infMDFeSupl"]'), 'qrCodMDFe');
         if ($qr === '') {
             $qr = sprintf(
@@ -214,6 +215,8 @@ final class Damdfe
 
     private function drawFiscalControl(DamdfePdf $pdf, float $x, float $y, float $width): void
     {
+        $pdf->RoundedRect($x, $y, $width, 42);
+
         $pdf->SetFont($this->config->font, '', 7);
         $pdf->SetXY($x + 1, $y + 0.5);
         $pdf->Cell($width - 2, 3, 'CONTROLE DO FISCO');
@@ -343,10 +346,10 @@ final class Damdfe
 
         $contentY = $headerY + 4;
         $contentHeight = $rows * 4.0;
-        $pdf->RoundedRect($x, $contentY, $width / 2, $contentHeight);
-        $pdf->RoundedRect($x + ($width / 2), $contentY, $width / 2, $contentHeight);
-        $pdf->Line($x + $municipalityWidth, $contentY, $x + $municipalityWidth, $contentY + $contentHeight);
-        $pdf->Line($x + ($width / 2) + $municipalityWidth, $contentY, $x + ($width / 2) + $municipalityWidth, $contentY + $contentHeight);
+        foreach ([0.0, $width / 2] as $offset) {
+            $pdf->RoundedRect($x + $offset, $contentY, $municipalityWidth, $contentHeight);
+            $pdf->RoundedRect($x + $offset + $municipalityWidth, $contentY, $keyWidth, $contentHeight);
+        }
 
         foreach (array_slice($documents, 0, $rows * 2) as $index => $document) {
             $column = $index % 2;
