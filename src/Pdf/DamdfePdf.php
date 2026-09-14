@@ -10,6 +10,35 @@ final class DamdfePdf extends FPDF
 {
     private float $angle = 0.0;
 
+    public function RoundedRect(
+        float $x,
+        float $y,
+        float $width,
+        float $height,
+        float $radius = 0.8,
+        string $style = 'D',
+    ): void {
+        $operator = match ($style) {
+            'F' => 'f',
+            'FD', 'DF' => 'B',
+            default => 'S',
+        };
+        $arc = (4 / 3) * (sqrt(2) - 1);
+        $right = $x + $width;
+        $bottom = $y + $height;
+
+        $this->_out(sprintf('%.2F %.2F m', ($x + $radius) * $this->k, ($this->h - $y) * $this->k));
+        $this->_out(sprintf('%.2F %.2F l', ($right - $radius) * $this->k, ($this->h - $y) * $this->k));
+        $this->arc($right - $radius + ($radius * $arc), $y, $right, $y + $radius - ($radius * $arc), $right, $y + $radius);
+        $this->_out(sprintf('%.2F %.2F l', $right * $this->k, ($this->h - ($bottom - $radius)) * $this->k));
+        $this->arc($right, $bottom - $radius + ($radius * $arc), $right - $radius + ($radius * $arc), $bottom, $right - $radius, $bottom);
+        $this->_out(sprintf('%.2F %.2F l', ($x + $radius) * $this->k, ($this->h - $bottom) * $this->k));
+        $this->arc($x + $radius - ($radius * $arc), $bottom, $x, $bottom - $radius + ($radius * $arc), $x, $bottom - $radius);
+        $this->_out(sprintf('%.2F %.2F l', $x * $this->k, ($this->h - ($y + $radius)) * $this->k));
+        $this->arc($x, $y + $radius - ($radius * $arc), $x + $radius - ($radius * $arc), $y, $x + $radius, $y);
+        $this->_out($operator);
+    }
+
     public function Rotate(float $angle, float $x = -1, float $y = -1): void
     {
         if ($x === -1.0) {
@@ -61,5 +90,18 @@ final class DamdfePdf extends FPDF
         }
 
         parent::_endpage();
+    }
+
+    private function arc(float $x1, float $y1, float $x2, float $y2, float $x3, float $y3): void
+    {
+        $this->_out(sprintf(
+            '%.2F %.2F %.2F %.2F %.2F %.2F c',
+            $x1 * $this->k,
+            ($this->h - $y1) * $this->k,
+            $x2 * $this->k,
+            ($this->h - $y2) * $this->k,
+            $x3 * $this->k,
+            ($this->h - $y3) * $this->k,
+        ));
     }
 }

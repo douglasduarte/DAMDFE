@@ -77,16 +77,22 @@ final class Damdfe
     private function draw(DamdfePdf $pdf): void
     {
         $pdf->SetDrawColor(0, 0, 0);
+        $pdf->SetFillColor(255, 255, 255);
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->SetLineWidth(0.15);
+        $pdf->SetLineWidth(0.1);
 
         $this->drawHeader($pdf);
-        $y = 93.0;
+        $y = $this->config->marginTop + 89;
         $y = $this->drawTollVoucher($pdf, $y);
+        $y += 1;
         $y = $this->drawRoute($pdf, $y);
+        $y += 1;
         $y = $this->drawDocuments($pdf, $y);
+        $y += 1;
         $y = $this->drawInsurance($pdf, $y);
+        $y += 1;
         $y = $this->drawCiot($pdf, $y);
+        $y += 1;
         $this->drawAdditionalInformation($pdf, $y);
         $this->drawWatermarks($pdf);
     }
@@ -98,14 +104,14 @@ final class Damdfe
         $width = 210.0 - $this->config->marginLeft - $this->config->marginRight;
         $middle = $x + ($width / 2);
 
-        $pdf->Rect($x, $y, $width, 88);
+        $pdf->RoundedRect($x, $y, $width, 88);
         $pdf->Line($middle, $y, $middle, $y + 88);
         $pdf->Line($x, $y + 25, $middle, $y + 25);
 
         $this->drawIssuer($pdf, $x, $y, $width / 2);
         $this->drawQrCode($pdf, $middle, $y, $width / 2);
 
-        $pdf->SetFont($this->config->font, '', 5.8);
+        $pdf->SetFont($this->config->font, 'B', 6.5);
         $pdf->SetXY($x, $y + 25.4);
         $pdf->Cell($width / 2, 2.6, $this->pdfText('DAMDFE - Documento Auxiliar do Manifesto de Documentos Fiscais Eletrônicos'), 0, 0, 'C');
 
@@ -116,29 +122,41 @@ final class Damdfe
 
     private function drawIssuer(DamdfePdf $pdf, float $x, float $y, float $width): void
     {
-        $textX = $x + 2;
-        $textWidth = $width - 4;
+        $textX = $x + 1;
+        $textWidth = $width - 2;
 
         if ($this->config->logo && is_file($this->config->logo)) {
             $pdf->Image($this->config->logo, $x + 2, $y + 2, 21, 20);
             $textX = $x + 25;
-            $textWidth = $width - 27;
+            $textWidth = $width - 26;
         }
 
         $issuer = $this->first('//*[local-name()="emit"]');
         $address = $this->first('//*[local-name()="emit"]/*[local-name()="enderEmit"]');
-        $lines = array_filter([
-            $this->text($issuer, 'xNome'),
-            trim($this->text($address, 'xLgr') . ' ' . $this->text($address, 'nro')),
-            trim($this->text($address, 'xBairro') . ' ' . $this->formatCep($this->text($address, 'CEP'))),
+        $street = trim($this->text($address, 'xLgr') . ', ' . $this->text($address, 'nro'), ' ,');
+        $location = implode(' - ', array_filter([
+            $this->text($address, 'xBairro'),
+            $this->formatCep($this->text($address, 'CEP')),
             trim($this->text($address, 'xMun') . ' - ' . $this->text($address, 'UF'), ' -'),
-            'CNPJ: ' . $this->formatDocument($this->documentNumber($issuer)) . ' IE: ' . $this->text($issuer, 'IE'),
-            'RNTRC: ' . $this->roadText('RNTRC') . ' TELEFONE: ' . $this->formatPhone($this->text($address, 'fone')),
-        ], static fn (string $line): bool => trim($line, ' :-') !== '');
+        ]));
 
-        $pdf->SetFont($this->config->font, '', 7);
-        $pdf->SetXY($textX, $y + 3.5);
-        $pdf->MultiCell($textWidth, 3, $this->pdfText(implode("\n", $lines)), 0, 'L');
+        $this->fittedCell($pdf, $textX, $y + 4.5, $textWidth, 4, $this->text($issuer, 'xNome'), 9, 'B', 'C', 6);
+        $this->fittedCell($pdf, $textX, $y + 9, $textWidth, 3, $street, 7, '', 'C', 5.5);
+        $this->fittedCell($pdf, $textX, $y + 12, $textWidth, 3, $location, 7, '', 'C', 5.5);
+        $this->fittedCell($pdf, $textX, $y + 15, $textWidth, 3, 'Fone/Fax: ' . $this->formatPhone($this->text($address, 'fone')), 7, '', 'C', 5.5);
+        $this->fittedCell(
+            $pdf,
+            $textX,
+            $y + 19,
+            $textWidth,
+            3,
+            'CNPJ/CPF: ' . $this->formatDocument($this->documentNumber($issuer)) . '    Insc.Estadual: ' . $this->text($issuer, 'IE'),
+            7,
+            '',
+            'C',
+            5.5,
+        );
+        $this->fittedCell($pdf, $textX, $y + 22, $textWidth, 3, 'RNTRC: ' . $this->roadText('RNTRC'), 6.5, '', 'C', 5.5);
     }
 
     private function drawQrCode(DamdfePdf $pdf, float $x, float $y, float $width): void
@@ -153,8 +171,8 @@ final class Damdfe
         }
 
         $path = $this->temporaryImage($this->barcodeGenerator()->qrCode($qr), 'qrcode');
-        $size = 21.0;
-        $pdf->Image($path, $x + (($width - $size) / 2), $y + 2, $size, $size, 'PNG');
+        $size = 22.0;
+        $pdf->Image($path, $x + (($width - $size) / 2), $y + 1.5, $size, $size, 'PNG');
     }
 
     private function drawIdentification(DamdfePdf $pdf, float $x, float $y, float $width): void
@@ -189,30 +207,30 @@ final class Damdfe
             default => $this->ideText('tpEmit'),
         };
         $environment = $this->ideText('tpAmb') === '1' ? 'PRODUÇÃO' : 'HOMOLOGAÇÃO';
-        $this->compactField($pdf, $x, $y + 14, 44, 8, 'TIPO DO EMITENTE', $emitter, 'C', 5.4);
+        $this->compactField($pdf, $x, $y + 14, 44, 8, 'TIPO DO EMITENTE', $emitter, 'C', 6);
         $this->compactField($pdf, $x + 44, $y + 14, 27, 8, 'TIPO DO AMBIENTE', $environment, 'C');
         $this->compactField($pdf, $x + 71, $y + 14, $width - 71, 8, 'CARGA POSTERIOR', $this->ideText('indCarregaPosterior'), 'C');
     }
 
     private function drawFiscalControl(DamdfePdf $pdf, float $x, float $y, float $width): void
     {
-        $pdf->SetFont($this->config->font, '', 6.5);
+        $pdf->SetFont($this->config->font, '', 7);
         $pdf->SetXY($x + 1, $y + 0.5);
         $pdf->Cell($width - 2, 3, 'CONTROLE DO FISCO');
 
         $barcode = $this->temporaryImage($this->barcodeGenerator()->code128($this->key), 'barcode');
         $pdf->Image($barcode, $x + 8, $y + 5, $width - 16, 16, 'PNG');
 
-        $pdf->SetFont($this->config->font, '', 5.8);
+        $pdf->SetFont($this->config->font, '', 6.5);
         $pdf->SetXY($x, $y + 22.5);
         $pdf->Cell($width, 3, 'Consulta em https://dfe-portal.svrs.rs.gov.br/MDFE/Consulta', 0, 0, 'C');
-        $pdf->SetFont($this->config->font, 'B', 6.5);
+        $pdf->SetFont($this->config->font, 'B', 7);
         $pdf->SetXY($x, $y + 27);
         $pdf->Cell($width, 3, $this->key, 0, 0, 'C');
-        $pdf->SetFont($this->config->font, 'B', 6);
+        $pdf->SetFont($this->config->font, '', 6.5);
         $pdf->SetXY($x, $y + 31.5);
         $pdf->Cell($width, 3, $this->pdfText('PROTOCOLO DE AUTORIZAÇÃO DE USO'), 0, 0, 'C');
-        $pdf->SetFont($this->config->font, '', 6);
+        $pdf->SetFont($this->config->font, 'B', 7);
         $pdf->SetXY($x, $y + 35.5);
         $pdf->Cell($width, 3, $this->pdfText($this->protocol()), 0, 0, 'C');
     }
@@ -249,8 +267,8 @@ final class Damdfe
         $cursor = $x;
 
         foreach ($vehicleWidths as $index => $cellWidth) {
-            $pdf->Rect($cursor, $y, $cellWidth, $height);
-            $this->smallText($pdf, $cursor + 1, $y + 1, $vehicleLabels[$index], true, 5.7);
+            $pdf->RoundedRect($cursor, $y, $cellWidth, $height);
+            $this->smallText($pdf, $cursor + 1, $y + 1, $vehicleLabels[$index], false, 6.3);
             $cursor += $cellWidth;
         }
 
@@ -258,7 +276,7 @@ final class Damdfe
         foreach (array_slice($vehicles, 0, 4) as $vehicle) {
             $cursor = $x;
             foreach (array_values($vehicle) as $index => $value) {
-                $this->smallText($pdf, $cursor + 1, $lineY, $value, false, 6);
+                $this->smallText($pdf, $cursor + 1, $lineY, $value, true, 6.5);
                 $cursor += $vehicleWidths[$index];
             }
             $lineY += 3;
@@ -266,14 +284,14 @@ final class Damdfe
 
         $driverX = $x + $half;
         $cpfWidth = 30.0;
-        $pdf->Rect($driverX, $y, $cpfWidth, $height);
-        $pdf->Rect($driverX + $cpfWidth, $y, $half - $cpfWidth, $height);
-        $this->smallText($pdf, $driverX + 1, $y + 1, 'CPF', true, 5.7);
-        $this->smallText($pdf, $driverX + $cpfWidth + 1, $y + 1, 'CONDUTORES', true, 5.7);
+        $pdf->RoundedRect($driverX, $y, $cpfWidth, $height);
+        $pdf->RoundedRect($driverX + $cpfWidth, $y, $half - $cpfWidth, $height);
+        $this->smallText($pdf, $driverX + 1, $y + 1, 'CPF', false, 6.3);
+        $this->smallText($pdf, $driverX + $cpfWidth + 1, $y + 1, 'CONDUTORES', false, 6.3);
         $lineY = $y + 4;
         foreach (array_slice($drivers, 0, 4) as $driver) {
-            $this->smallText($pdf, $driverX + 1, $lineY, $driver['cpf'], false, 6);
-            $this->smallText($pdf, $driverX + $cpfWidth + 1, $lineY, $driver['name'], false, 6);
+            $this->smallText($pdf, $driverX + 1, $lineY, $driver['cpf'], true, 6.5);
+            $this->smallText($pdf, $driverX + $cpfWidth + 1, $lineY, $driver['name'], true, 6.5);
             $lineY += 3;
         }
     }
@@ -299,8 +317,8 @@ final class Damdfe
         $x = $this->config->marginLeft;
         $width = 210.0 - $this->config->marginLeft - $this->config->marginRight;
         $this->titleRow($pdf, $x, $y, $width, 4, 'PERCURSO');
-        $pdf->Rect($x, $y + 4, $width, 5);
-        $this->smallText($pdf, $x + 1, $y + 5, implode(' / ', $this->routeStates()), false, 6.5);
+        $pdf->RoundedRect($x, $y + 4, $width, 5);
+        $this->smallText($pdf, $x + 1, $y + 5, implode(' / ', $this->routeStates()), true, 7);
 
         return $y + 9;
     }
@@ -317,16 +335,16 @@ final class Damdfe
         $keyWidth = ($width / 2) - $municipalityWidth;
         $headerY = $y + 5;
         foreach ([0.0, $width / 2] as $offset) {
-            $pdf->Rect($x + $offset, $headerY, $municipalityWidth, 4);
-            $pdf->Rect($x + $offset + $municipalityWidth, $headerY, $keyWidth, 4);
-            $this->smallText($pdf, $x + $offset + 1, $headerY + 1, 'MUNICÍPIO', false, 5.3);
-            $this->smallText($pdf, $x + $offset + $municipalityWidth + 1, $headerY + 1, 'INFORMAÇÕES DOS DOCS. FISCAIS VINCULADOS AO MANIFESTO', false, 4.8);
+            $pdf->RoundedRect($x + $offset, $headerY, $municipalityWidth, 4);
+            $pdf->RoundedRect($x + $offset + $municipalityWidth, $headerY, $keyWidth, 4);
+            $this->smallText($pdf, $x + $offset + 1, $headerY + 1, 'MUNICÍPIO', false, 6);
+            $this->smallText($pdf, $x + $offset + $municipalityWidth + 1, $headerY + 1, 'INFORMAÇÕES DOS DOCS. FISCAIS VINCULADOS AO MANIFESTO', false, 5.3);
         }
 
         $contentY = $headerY + 4;
         $contentHeight = $rows * 4.0;
-        $pdf->Rect($x, $contentY, $width / 2, $contentHeight);
-        $pdf->Rect($x + ($width / 2), $contentY, $width / 2, $contentHeight);
+        $pdf->RoundedRect($x, $contentY, $width / 2, $contentHeight);
+        $pdf->RoundedRect($x + ($width / 2), $contentY, $width / 2, $contentHeight);
         $pdf->Line($x + $municipalityWidth, $contentY, $x + $municipalityWidth, $contentY + $contentHeight);
         $pdf->Line($x + ($width / 2) + $municipalityWidth, $contentY, $x + ($width / 2) + $municipalityWidth, $contentY + $contentHeight);
 
@@ -335,8 +353,8 @@ final class Damdfe
             $row = intdiv($index, 2);
             $cellX = $x + ($column * ($width / 2));
             $lineY = $contentY + ($row * 4) + 0.8;
-            $this->smallText($pdf, $cellX + 1, $lineY, $document['municipality'], false, 5.4);
-            $this->smallText($pdf, $cellX + $municipalityWidth + 1, $lineY, $document['key'], false, 5.2);
+            $this->smallText($pdf, $cellX + 1, $lineY, $document['municipality'], true, 6);
+            $this->smallText($pdf, $cellX + $municipalityWidth + 1, $lineY, $document['key'], false, 5.8);
         }
 
         return $contentY + $contentHeight;
@@ -348,7 +366,7 @@ final class Damdfe
         $width = 210.0 - $this->config->marginLeft - $this->config->marginRight;
         $height = 36.0;
         $this->titleRow($pdf, $x, $y, $width, 5, 'INFORMAÇÕES SOBRE OS SEGUROS');
-        $pdf->Rect($x, $y + 5, $width, $height - 5);
+        $pdf->RoundedRect($x, $y + 5, $width, $height - 5);
         $lineY = $y + 6;
         $lastLineY = $y + $height - 3;
 
@@ -367,7 +385,7 @@ final class Damdfe
                 if ($lineY > $lastLineY) {
                     break 2;
                 }
-                $this->smallText($pdf, $x + 1, $lineY, $this->truncate($line, $width - 2), false, 6);
+                $this->smallText($pdf, $x + 1, $lineY, $this->truncate($line, $width - 2), false, 6.5);
                 $lineY += 3.5;
             }
         }
@@ -386,9 +404,9 @@ final class Damdfe
         $width = 210.0 - $this->config->marginLeft - $this->config->marginRight;
         $height = 5 + (min(3, count($ciots)) * 3.5);
         $this->titleRow($pdf, $x, $y, $width, 5, 'INFORMAÇÕES DO CIOT');
-        $pdf->Rect($x, $y + 5, $width, $height - 5);
+        $pdf->RoundedRect($x, $y + 5, $width, $height - 5);
         foreach (array_slice($ciots, 0, 3) as $index => $ciot) {
-            $this->smallText($pdf, $x + 1, $y + 6 + ($index * 3.5), $ciot, false, 6);
+            $this->smallText($pdf, $x + 1, $y + 6 + ($index * 3.5), $ciot, true, 6.5);
         }
 
         return $y + $height;
@@ -398,19 +416,19 @@ final class Damdfe
     {
         $x = $this->config->marginLeft;
         $width = 210.0 - $this->config->marginLeft - $this->config->marginRight;
-        $bottom = 292.0;
+        $bottom = 297.0 - $this->config->marginBottom;
         $available = max(30.0, $bottom - $y);
         $contributorHeight = $available * 0.52;
         $fiscalHeight = $available - $contributorHeight;
         $additional = $this->first('//*[local-name()="infAdic"]');
 
         $this->titleRow($pdf, $x, $y, $width, 5, 'INFORMAÇÕES COMPLEMENTARES DE INTERESSE DO CONTRIBUINTE');
-        $pdf->Rect($x, $y + 5, $width, $contributorHeight - 5);
+        $pdf->RoundedRect($x, $y + 5, $width, $contributorHeight - 5);
         $this->wrappedText($pdf, $x + 1, $y + 6, $width - 2, $contributorHeight - 7, $this->text($additional, 'infCpl'));
 
         $fiscalY = $y + $contributorHeight;
         $this->titleRow($pdf, $x, $fiscalY, $width, 5, 'INFORMAÇÕES ADICIONAIS DE INTERESSE DO FISCO');
-        $pdf->Rect($x, $fiscalY + 5, $width, $fiscalHeight - 5);
+        $pdf->RoundedRect($x, $fiscalY + 5, $width, $fiscalHeight - 5);
         $this->wrappedText(
             $pdf,
             $x + 1,
@@ -440,10 +458,8 @@ final class Damdfe
 
     private function titleRow(DamdfePdf $pdf, float $x, float $y, float $width, float $height, string $title): void
     {
-        $pdf->Rect($x, $y, $width, $height);
-        $pdf->SetFont($this->config->font, 'B', 7);
-        $pdf->SetXY($x, $y + max(0.3, ($height - 3) / 2));
-        $pdf->Cell($width, 3, $this->pdfText($title), 0, 0, 'C');
+        $pdf->RoundedRect($x, $y, $width, $height);
+        $this->fittedCell($pdf, $x + 0.5, $y + max(0.3, ($height - 3) / 2), $width - 1, 3, $title, 8, 'B', 'C', 5.5);
     }
 
     private function compactField(
@@ -455,21 +471,44 @@ final class Damdfe
         string $label,
         string $value,
         string $align = 'L',
-        float $valueSize = 6.2,
+        float $valueSize = 7,
     ): void {
-        $pdf->Rect($x, $y, $width, $height);
-        $pdf->SetFont($this->config->font, '', 5.2);
-        $pdf->SetXY($x + 0.6, $y + 0.4);
-        $pdf->Cell($width - 1.2, 2.2, $this->pdfText($label), 0, 0, $align);
-        $pdf->SetFont($this->config->font, '', $valueSize);
-        $pdf->SetXY($x + 0.6, $y + 3.1);
+        $pdf->RoundedRect($x, $y, $width, $height);
+        $this->fittedCell($pdf, $x + 0.8, $y + 0.5, $width - 1.6, 2.5, $label, 6.2, '', $align, 4.5);
         if (str_contains($value, "\n")) {
-            $pdf->MultiCell($width - 1.2, 2, $this->pdfText($value), 0, $align);
+            $pdf->SetFont($this->config->font, 'B', $valueSize);
+            $pdf->SetXY($x + 0.8, $y + 2.9);
+            $pdf->MultiCell($width - 1.6, 1.7, $this->pdfText($value), 0, $align);
 
             return;
         }
 
-        $pdf->Cell($width - 1.2, 2.6, $this->pdfText($this->truncate($value, $width)), 0, 0, $align);
+        $this->fittedCell($pdf, $x + 0.8, $y + 3.1, $width - 1.6, 2.8, $value, $valueSize, 'B', $align, 4.5);
+    }
+
+    private function fittedCell(
+        DamdfePdf $pdf,
+        float $x,
+        float $y,
+        float $width,
+        float $height,
+        string $text,
+        float $size,
+        string $style = '',
+        string $align = 'L',
+        float $minimumSize = 5,
+    ): void {
+        $encoded = $this->pdfText($text);
+        $fontSize = $size;
+        $pdf->SetFont($this->config->font, $style, $fontSize);
+
+        while ($fontSize > $minimumSize && $pdf->GetStringWidth($encoded) > $width) {
+            $fontSize -= 0.25;
+            $pdf->SetFont($this->config->font, $style, $fontSize);
+        }
+
+        $pdf->SetXY($x, $y);
+        $pdf->Cell($width, $height, $encoded, 0, 0, $align);
     }
 
     private function smallText(DamdfePdf $pdf, float $x, float $y, string $text, bool $bold = false, float $size = 6): void
@@ -481,7 +520,7 @@ final class Damdfe
 
     private function wrappedText(DamdfePdf $pdf, float $x, float $y, float $width, float $height, string $text): void
     {
-        $pdf->SetFont($this->config->font, '', 6);
+        $pdf->SetFont($this->config->font, '', 6.5);
         $text = str_replace(["\r\n", "\r", '&#10;', '&#13;'], "\n", $text);
         $lines = [];
 
@@ -505,15 +544,16 @@ final class Damdfe
             $lines[] = $line;
         }
 
-        $maxLines = max(1, (int) floor($height / 3));
+        $lineHeight = 3.2;
+        $maxLines = max(1, (int) floor($height / $lineHeight));
         if (count($lines) > $maxLines) {
             $lines = array_slice($lines, 0, $maxLines);
             $lines[$maxLines - 1] = mb_strimwidth($lines[$maxLines - 1], 0, 150, '...', 'UTF-8');
         }
 
         foreach ($lines as $index => $line) {
-            $pdf->SetXY($x, $y + ($index * 3));
-            $pdf->Cell($width, 3, $this->pdfText($line));
+            $pdf->SetXY($x, $y + ($index * $lineHeight));
+            $pdf->Cell($width, $lineHeight, $this->pdfText($line));
         }
     }
 
