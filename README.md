@@ -54,3 +54,11 @@ O documento inclui:
 
 Quando o XML não contém `qrCodMDFe`, a biblioteca monta a URL pública de
 consulta a partir da chave de acesso e do ambiente.
+
+
+A logo pode ser informada em `DamdfeConfig(logo: '/caminho/da/logo.jpg')`.
+Ela aparece centralizada acima da razão social, preservando a proporção da
+imagem. Endereço, telefone, CNPJ/CPF e inscrição estadual seguem abaixo,
+também centralizados. O RNTRC permanece nas informações do transporte,
+sem repetição no quadro do emitente. Sem uma logo válida, os dados
+permanecem centralizados no quadro.

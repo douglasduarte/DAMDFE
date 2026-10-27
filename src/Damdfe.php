@@ -8,6 +8,7 @@ use DAMDFE\Barcode\BarcodeGeneratorInterface;
 use DAMDFE\Barcode\MilonBarcodeGenerator;
 use DAMDFE\Config\DamdfeConfig;
 use DAMDFE\Pdf\DamdfePdf;
+use DAMDFE\Pdf\IssuerHeader;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
@@ -101,7 +102,7 @@ final class Damdfe
         $x = $this->config->marginLeft;
         $y = $this->config->marginTop;
         $width = 210.0 - $this->config->marginLeft - $this->config->marginRight;
-        $issuerWidth = 66.0;
+        $issuerWidth = 68.0;
         $qrWidth = 46.0;
         $controlWidth = $width - $issuerWidth - $qrWidth;
         $controlX = $x + $issuerWidth;
@@ -259,43 +260,22 @@ final class Damdfe
 
     private function drawIssuer(DamdfePdf $pdf, float $x, float $y, float $width): void
     {
-        $pdf->RoundedRect($x, $y, $width, 36);
+        $issuer = $this->first('//*[local-name()="emit"]');
+        if (!$issuer) {
+            $pdf->Rect($x, $y, $width, 36);
 
-        $textX = $x + 1;
-        $textWidth = $width - 2;
-
-        if ($this->config->logo && is_file($this->config->logo)) {
-            $pdf->Image($this->config->logo, $x + 2, $y + 7, 21, 20);
-            $textX = $x + 25;
-            $textWidth = $width - 26;
+            return;
         }
 
-        $issuer = $this->first('//*[local-name()="emit"]');
-        $address = $this->first('//*[local-name()="emit"]/*[local-name()="enderEmit"]');
-        $street = trim($this->text($address, 'xLgr') . ', ' . $this->text($address, 'nro'), ' ,');
-        $location = implode(' - ', array_filter([
-            $this->text($address, 'xBairro'),
-            $this->formatCep($this->text($address, 'CEP')),
-            trim($this->text($address, 'xMun') . ' - ' . $this->text($address, 'UF'), ' -'),
-        ]));
-
-        $this->fittedCell($pdf, $textX, $y + 10, $textWidth, 4, $this->text($issuer, 'xNome'), 9, 'B', 'C', 6);
-        $this->fittedCell($pdf, $textX, $y + 15, $textWidth, 3, $street, 7, '', 'C', 5.5);
-        $this->fittedCell($pdf, $textX, $y + 18, $textWidth, 3, $location, 7, '', 'C', 5.5);
-        $this->fittedCell($pdf, $textX, $y + 21, $textWidth, 3, 'Fone/Fax: ' . $this->formatPhone($this->text($address, 'fone')), 7, '', 'C', 5.5);
-        $this->fittedCell(
+        (new IssuerHeader())->render(
             $pdf,
-            $textX,
-            $y + 26,
-            $textWidth,
-            3,
-            'CNPJ/CPF: ' . $this->formatDocument($this->documentNumber($issuer)) . '    Insc.Estadual: ' . $this->text($issuer, 'IE'),
-            7,
-            '',
-            'C',
-            5.5,
+            $issuer,
+            $x,
+            $y,
+            $width,
+            $this->config->logo,
+            $this->config->font,
         );
-        $this->fittedCell($pdf, $textX, $y + 30, $textWidth, 3, 'RNTRC: ' . $this->roadText('RNTRC'), 6.5, '', 'C', 5.5);
     }
 
     private function drawQrCode(DamdfePdf $pdf, float $x, float $y, float $width, float $height): void
