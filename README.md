@@ -50,7 +50,7 @@ O documento inclui:
 - resumo ANTT, veículos, reboques e condutores;
 - vale-pedágio, percurso e composição da carga em duas colunas;
 - seguros, CIOT e informações adicionais;
-- marcas d'água de homologação, ausência de protocolo e contingência.
+- avisos de homologação e ausência de protocolo, além da marca de contingência.
 
 Quando o XML não contém `qrCodMDFe`, a biblioteca monta a URL pública de
 consulta a partir da chave de acesso e do ambiente.
@@ -62,3 +62,7 @@ imagem. Endereço, telefone, CNPJ/CPF e inscrição estadual seguem abaixo,
 também centralizados. O RNTRC permanece nas informações do transporte,
 sem repetição no quadro do emitente. Sem uma logo válida, os dados
 permanecem centralizados no quadro.
+
+Em homologação ou sem protocolo de autorização, o aviso de documento sem
+valor fiscal aparece em uma linha no topo, em negrito, sem sobrepor os dados.
+Documentos de produção autorizados não exibem esse aviso. O XML é preservado.

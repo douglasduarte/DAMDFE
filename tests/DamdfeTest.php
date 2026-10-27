@@ -31,6 +31,42 @@ final class DamdfeTest extends TestCase
         new Damdfe('<invalid');
     }
 
+    public function test_it_identifies_documents_without_fiscal_value_only_when_required(): void
+    {
+        $xml = file_get_contents(__DIR__ . '/fixtures/mdfe-minimal.xml');
+
+        self::assertIsString($xml);
+
+        $pageContent = static function (string $variant): string {
+            $pdf = (new Damdfe($variant))->render();
+            self::assertSame(1, preg_match('/stream\r?\n(.*?)\r?\nendstream/s', $pdf, $stream));
+            $content = gzuncompress($stream[1]);
+            self::assertIsString($content);
+
+            return $content;
+        };
+
+        $notProtocolledLabel = mb_convert_encoding('NÃO PROTOCOLADO', 'Windows-1252', 'UTF-8');
+        $homologation = $pageContent($xml);
+        self::assertStringContainsString('SEM VALOR FISCAL', $homologation);
+        self::assertStringContainsString(mb_convert_encoding('EMITIDO EM AMBIENTE DE HOMOLOGAÇÃO', 'Windows-1252', 'UTF-8'), $homologation);
+        self::assertStringNotContainsString($notProtocolledLabel, $homologation);
+
+        $withoutProtocol = preg_replace('~<protMDFe>.*?</protMDFe>~s', '', $xml);
+        self::assertIsString($withoutProtocol);
+        $unprotocolled = $pageContent($withoutProtocol);
+        self::assertStringContainsString('SEM VALOR FISCAL', $unprotocolled);
+        self::assertStringContainsString($notProtocolledLabel, $unprotocolled);
+
+        $production = $pageContent(str_replace('<tpAmb>2</tpAmb>', '<tpAmb>1</tpAmb>', $xml));
+        self::assertStringNotContainsString('SEM VALOR FISCAL', $production);
+        self::assertStringNotContainsString($notProtocolledLabel, $production);
+
+        $unprotocolledProduction = $pageContent(str_replace('<tpAmb>2</tpAmb>', '<tpAmb>1</tpAmb>', $withoutProtocol));
+        self::assertStringContainsString('SEM VALOR FISCAL', $unprotocolledProduction);
+        self::assertStringContainsString($notProtocolledLabel, $unprotocolledProduction);
+    }
+
     public function test_it_uses_dacte_compatible_visual_defaults(): void
     {
         $config = new DamdfeConfig();

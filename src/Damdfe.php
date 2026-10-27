@@ -102,6 +102,16 @@ final class Damdfe
         $x = $this->config->marginLeft;
         $y = $this->config->marginTop;
         $width = 210.0 - $this->config->marginLeft - $this->config->marginRight;
+        $notice = match (true) {
+            $this->first('//*[local-name()="protMDFe"]') === null => 'MDF-e NÃO PROTOCOLADO - SEM VALOR FISCAL',
+            $this->ideText('tpAmb') === '2' => 'MDF-e EMITIDO EM AMBIENTE DE HOMOLOGAÇÃO - SEM VALOR FISCAL',
+            default => '',
+        };
+        if ($notice !== '') {
+            $pdf->RoundedRect($x, $y, $width, 5);
+            $this->fittedCell($pdf, $x + 1, $y + 0.8, $width - 2, 3, $notice, 7.5, 'B', 'C', 6);
+            $y += 6;
+        }
         $issuerWidth = 68.0;
         $qrWidth = 46.0;
         $controlWidth = $width - $issuerWidth - $qrWidth;
@@ -551,13 +561,6 @@ final class Damdfe
 
     private function drawWatermarks(DamdfePdf $pdf): void
     {
-        if ($this->ideText('tpAmb') === '2' || $this->first('//*[local-name()="protMDFe"]') === null) {
-            $pdf->SetTextColor(220, 145, 145);
-            $pdf->SetFont($this->config->font, 'B', 45);
-            $pdf->RotatedText(38, 252, $this->pdfText('SEM VALOR FISCAL'), 55);
-            $pdf->SetTextColor(0, 0, 0);
-        }
-
         if ($this->ideText('tpEmis') === '2') {
             $pdf->SetTextColor(145, 145, 145);
             $pdf->SetFont($this->config->font, 'B', 17);
